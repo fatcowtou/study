@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- iOS / iPadOS Web App 支援設定，加到主畫面時可全螢幕運作 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="英語小達人">
+    <title>英語小達人 🌟 趣味生字學習樂園</title>
+    <style>
+        :root {
+            --primary-color: #ff6b81;
+            --primary-hover: #ff4757;
+            --secondary-color: #ffa502;
+            --sky-blue: #70a1ff;
+            --mint-green: #2ed573;
+            --bg-color: #f0f9ff;
+            --card-bg: #ffffff;
+            --text-color: #2f3542;
+            --gray-color: #747d8c;
+            --border-color: #dfe4ea;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: "Comic Sans MS", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #fbc531 0%, #00d2d3 100%);
+            background-attachment: fixed;
+            color: var(--text-color);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: rgba(255, 255, 255, 0.96);
+            padding: 20px;
+            border-radius: 28px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+            border: 4px solid #ffffff;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        header h1 {
+            margin: 0 0 6px 0;
+            color: #ff4757;
+            font-size: clamp(1.75rem, 5vw, 2.25rem);
+            text-shadow: 2px 2px 0px #ffeaa7;
+        }
+
+        header p {
+            color: #2ed573;
+            font-weight: bold;
+            font-size: 1.05rem;
+            margin: 0;
+        }
+
+        /* 自訂通知提示框 (取代 alert/confirm) */
+        .toast-banner {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2f3542;
+            color: #ffffff;
+            padding: 14px 22px;
+            border-radius: 18px;
+            font-weight: bold;
+            font-size: 1rem;
+            z-index: 9999;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            max-width: 90vw;
+            animation: slideDown 0.25s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translate(-50%, -15px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        /* 自訂確認視窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 24px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 4px solid #70a1ff;
+        }
+
+        .modal-box p {
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin: 0 0 20px 0;
+            color: var(--text-color);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        /* 章節選擇列 */
+        .chapter-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            background: #dff9fb;
+            padding: 12px 14px;
+            border-radius: 18px;
+            margin-bottom: 14px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            border: 2px solid #22a6b3;
+            flex-wrap: wrap;
+        }
+
+        .chapter-select {
+            padding: 10px 14px;
+            border: 2px solid #22a6b3;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #130f40;
+            background: #ffffff;
+            cursor: pointer;
+            outline: none;
+            min-height: 44px;
+            max-width: 100%;
+        }
+
+        .reset-btn {
+            padding: 10px 14px;
+            border: 2px solid #eb4d4b;
+            background: #ffffff;
+            color: #eb4d4b;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            min-height: 44px;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:active {
+            background: #eb4d4b;
+            color: #ffffff;
+            transform: scale(0.97);
+        }
+
+        /* 全域語速控制列 */
+        .speed-control-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            background: #fff200;
+            padding: 10px 14px;
+            border-radius: 18px;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.05);
+            margin-bottom: 18px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            border: 2px dashed #ff4757;
+            flex-wrap: wrap;
+        }
+
+        .speed-btn {
+            padding: 8px 12px;
+            border: 2px solid #ff4757;
+            background: #ffffff;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #ff4757;
+            font-size: 0.9rem;
+            min-height: 42px;
+            transition: all 0.15s;
+        }
+
+        .speed-btn.active {
+            background-color: #ff4757;
+            color: white;
+            transform: scale(1.04);
+        }
+
+        /* 分頁導覽列 (適合手指點擊) */
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .tab-btn {
+            padding: 12px 10px;
+            border: none;
+            background-color: #70a1ff;
+            color: white;
+            font-weight: bold;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 0.92rem;
+            min-height: 46px;
+            box-shadow: 0 4px 0 #1e90ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .tab-btn:active {
+            transform: translateY(2px);
+        }
+
+        .tab-btn.active {
+            background-color: #ff4757;
+            box-shadow: 0 4px 0 #d63031;
+        }
+
+        .section {
+            display: none;
+            background: var(--card-bg);
+            padding: 16px 12px;
+            border-radius: 20px;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* 閃卡模式 (Flashcard) */
+        .flashcard-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 250px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
+            transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
+            border-radius: 22px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+            -webkit-transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 22px;
+            border: 4px solid #70a1ff;
+            background: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            -webkit-transform: rotateY(180deg);
+            background-color: #fff1f2;
+            border-color: #ff6b81;
+        }
+
+        .word-title {
+            font-size: clamp(1.65rem, 6vw, 2.35rem);
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2ed573;
+            text-shadow: 1px 1px 0px #b8e994;
+            line-height: 1.25;
+            word-break: break-word;
+        }
+
+        .word-phonetic {
+            color: var(--gray-color);
+            margin-bottom: 10px;
+            font-size: 1.05rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .word-meaning {
+            font-size: clamp(1.5rem, 5vw, 1.9rem);
+            font-weight: bold;
+            color: #ff4757;
+            margin-bottom: 8px;
+        }
+
+        .word-example {
+            font-size: 1.02rem;
+            color: #57606f;
+            margin-top: 8px;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        .card-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speak-btn {
+            background-color: #2ed573;
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            min-height: 46px;
+            box-shadow: 0 4px 0 #26af5f;
+            transition: all 0.1s;
+        }
+
+        .speak-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #26af5f;
+        }
+
+        /* 測驗模式通用樣式 */
+        .quiz-box {
+            text-align: center;
+        }
+
+        .quiz-question-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .quiz-question {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #3742fa;
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        @media (max-width: 480px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .option-btn {
+            padding: 16px 14px;
+            border: 3px solid #ced6e0;
+            background: #ffffff;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-weight: bold;
+            color: var(--text-color);
+            min-height: 54px;
+            box-shadow: 0 4px 0 #dfe4ea;
+            word-break: break-word;
+        }
+
+        .option-btn:active {
+            transform: translateY(2px);
+        }
+
+        .option-btn.correct {
+            background-color: #2ed573 !important;
+            border-color: #26af5f !important;
+            color: white !important;
+            box-shadow: 0 4px 0 #20bf6b !important;
+        }
+
+        .option-btn.incorrect {
+            background-color: #ff4757 !important;
+            border-color: #ff6b81 !important;
+            color: white !important;
+            box-shadow: 0 4px 0 #eb2f06 !important;
+        }
+
+        .quiz-info-bar {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            color: #ff4757;
+            margin-bottom: 14px;
+            font-size: 1.05rem;
+            background: #ffeaa7;
+            padding: 10px 14px;
+            border-radius: 12px;
+        }
+
+        .spelling-input-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+            align-items: stretch;
+        }
+
+        .spelling-result {
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin-bottom: 14px;
+            min-height: 28px;
+        }
+
+        /* 生字清單管理 */
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .input-group {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
+
+        /* iOS Safari 防止自動縮放，字體需 >= 16px */
+        input, textarea {
+            width: 100%;
+            padding: 13px 14px;
+            border: 3px solid #dfe4ea;
+            border-radius: 14px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            border-color: #70a1ff;
+        }
+
+        .spelling-input-box input {
+            margin-bottom: 0;
+        }
+
+        .btn {
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #e84118;
+            font-size: 1rem;
+            min-height: 46px;
+            white-space: nowrap;
+            transition: all 0.1s;
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #e84118;
+        }
+
+        .ai-btn {
+            background: linear-gradient(135deg, #70a1ff, #1e90ff);
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            min-height: 46px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 0 #3742fa;
+            font-size: 1rem;
+            transition: all 0.1s;
+        }
+
+        .ai-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #3742fa;
+        }
+
+        .word-list {
+            margin-top: 18px;
+            max-height: 320px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            border-top: 3px dashed #dfe4ea;
+            padding-top: 12px;
+        }
+
+        .word-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border-bottom: 2px solid #f1f2f6;
+            background: #f8f9fa;
+            border-radius: 14px;
+            margin-bottom: 8px;
+        }
+
+        .word-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .delete-btn {
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            min-height: 38px;
+        }
+
+        .hint-text {
+            color: var(--gray-color);
+            font-size: 0.95rem;
+            text-align: center;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 提示橫幅 -->
+<div id="toast-banner" class="toast-banner"></div>
+
+<!-- 自訂確認視窗 -->
+<div id="confirm-modal" class="modal-overlay">
+    <div class="modal-box">
+        <p id="confirm-modal-text">確定要執行此操作嗎？</p>
+        <div class="modal-actions">
+            <button class="btn" style="background-color: #747d8c; box-shadow: 0 4px 0 #57606f;" onclick="closeConfirmModal(false)">取消</button>
+            <button class="btn" onclick="closeConfirmModal(true)">確定</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <header>
+        <h1>🌟 英語小達人 🌟</h1>
+        <p>🚀 開心背單字，快樂通關趣！</p>
+    </header>
+
+    <!-- 章節選擇列 -->
+    <div class="chapter-bar">
+        <span>📖 選擇章節：</span>
+        <select id="chapter-select" class="chapter-select" onchange="switchChapter(this.value)">
+            <option value="ch1">第 1 組：食物包裝與營養（16字）</option>
+            <option value="ch2">第 2 組：餐點與味覺形容（14字）</option>
+            <option value="all">全部合併總複習（30字）</option>
+        </select>
+        <button class="reset-btn" onclick="requestResetChapter()" title="還原此章節預設生字">🔄 重置章節</button>
+    </div>
+
+    <!-- 語速選擇控制列 -->
+    <div class="speed-control-bar">
+        <span>🐰 朗讀速度：</span>
+        <button class="speed-btn" onclick="setSpeechSpeed(0.5, this)">超慢 (0.5x)</button>
+        <button class="speed-btn" onclick="setSpeechSpeed(0.75, this)">慢速 (0.75x)</button>
+        <button class="speed-btn active" onclick="setSpeechSpeed(1.0, this)">正常 (1.0x)</button>
+        <button class="speed-btn" onclick="setSpeechSpeed(1.25, this)">快速 (1.25x)</button>
+    </div>
+
+    <!-- 分頁導覽列 -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('flashcard', this)">🎯 記憶閃卡</button>
+        <button class="tab-btn" onclick="switchTab('quiz1', this)">🏆 測驗1:看字選義</button>
+        <button class="tab-btn" onclick="switchTab('quiz2', this)">🎧 測驗2:聽音辨字</button>
+        <button class="tab-btn" onclick="switchTab('quiz3', this)">⌨️ 測驗3:聽音拼字</button>
+        <button class="tab-btn" onclick="switchTab('manage', this)">📚 生字管理</button>
+    </div>
+
+    <!-- 1. 記憶閃卡區 -->
+    <div id="flashcard-section" class="section active">
+        <div class="flashcard-container" onclick="flipCard()">
+            <div class="flashcard" id="card">
+                <div class="card-face">
+                    <div class="word-title" id="fc-word">A carton of soya milk</div>
+                    <div class="word-phonetic" id="fc-phonetic">/ə ˈkɑːrtn əv ˈsɔɪə mɪlk/</div>
+                    <div class="hint-text" style="color:#ff4757; font-weight:bold;">👆 點擊卡片翻面看中文！</div>
+                </div>
+                <div class="card-face card-back">
+                    <div class="word-meaning" id="fc-meaning">一盒豆漿</div>
+                    <div class="word-example" id="fc-example">例句：I drink a carton of soya milk for breakfast.</div>
+                </div>
+            </div>
+        </div>
+        <div style="text-align: center; margin-bottom: 16px;">
+            <button class="speak-btn" onclick="speakCurrentWord(event)">🔊 聽發音</button>
+        </div>
+        <div class="card-controls">
+            <button class="btn" onclick="prevCard()">⬅️ 上一個</button>
+            <span id="card-counter" style="font-weight:bold; color:#70a1ff; font-size:1.15rem;">1 / 16</span>
+            <button class="btn" onclick="nextCard()">下一個 ➡️</button>
+        </div>
+    </div>
+
+    <!-- 2. 自我測驗 1：看字選義 -->
+    <div id="quiz1-section" class="section">
+        <div class="quiz-box">
+            <div id="quiz1-container">
+                <div class="quiz-info-bar">
+                    <div id="quiz1-counter">題目 1 / 16</div>
+                    <div id="quiz1-timer">⏱️ 時間：00:00</div>
+                </div>
+                <div class="quiz-question-container">
+                    <div class="quiz-question" id="quiz1-question">請找出英文生字的中文意思：</div>
+                    <button class="speak-btn" onclick="speakQuiz1Word()" style="margin:4px 0 8px 0;">🔊 聽發音</button>
+                </div>
+                <div class="options-grid" id="quiz1-options"></div>
+                <div class="spelling-result" id="quiz1-result"></div>
+            </div>
+            <div id="quiz1-finished" style="display:none; text-align:center;">
+                <h2>🎉 太棒了！挑戰成功！ 🌟</h2>
+                <p class="hint-text" id="quiz1-stats" style="margin-bottom: 20px; font-size: 1.15rem; font-weight:bold; color:#ff4757; white-space: pre-line;"></p>
+                <button class="btn" onclick="initQuiz1()">再玩一次 🎮</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 自我測驗 2：聽音辨字 -->
+    <div id="quiz2-section" class="section">
+        <div class="quiz-box">
+            <div id="quiz2-container">
+                <div class="quiz-info-bar">
+                    <div id="quiz2-counter">題目 1 / 16</div>
+                    <div id="quiz2-timer">⏱️ 時間：00:00</div>
+                </div>
+                <div class="quiz-question-container">
+                    <div class="quiz-question">請仔細聽發音，選出正確的英文單字：</div>
+                    <button class="speak-btn" onclick="speakQuiz2Word()" style="margin:4px 0 8px 0;">🔊 再次聽發音</button>
+                </div>
+                <div class="options-grid" id="quiz2-options"></div>
+                <div class="spelling-result" id="quiz2-result"></div>
+            </div>
+            <div id="quiz2-finished" style="display:none; text-align:center;">
+                <h2>🎉 太棒了！聽力達人！ 🌟</h2>
+                <p class="hint-text" id="quiz2-stats" style="margin-bottom: 20px; font-size: 1.15rem; font-weight:bold; color:#ff4757; white-space: pre-line;"></p>
+                <button class="btn" onclick="initQuiz2()">再玩一次 🎮</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 自我測驗 3：聽音拼字 -->
+    <div id="quiz3-section" class="section">
+        <div class="quiz-box">
+            <div id="quiz3-container">
+                <div class="quiz-info-bar">
+                    <div id="quiz3-counter">題目 1 / 16</div>
+                    <div id="quiz3-timer">⏱️ 時間：00:00</div>
+                </div>
+                <div class="quiz-question-container">
+                    <div class="quiz-question">請聽發音，在下方打出正確英文生字：</div>
+                    <button class="speak-btn" onclick="speakQuiz3Word()" style="margin:4px 0 6px 0;">🔊 再次聽發音</button>
+                    <div class="hint-text" id="quiz3-hint" style="margin-top: 6px; font-weight:bold; color:#2ed573; font-size: 1.05rem;"></div>
+                </div>
+                <div class="spelling-input-box">
+                    <input type="text" id="quiz3-input" placeholder="請輸入英文生字..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" onkeydown="handleSpellingKeydown(event)">
+                    <button class="btn" onclick="checkSpellingAnswer()" id="quiz3-submit-btn">送出</button>
+                </div>
+                <div class="spelling-result" id="quiz3-result"></div>
+            </div>
+            <div id="quiz3-finished" style="display:none; text-align:center;">
+                <h2>🎉 太棒了！拼字高手！ 🌟</h2>
+                <p class="hint-text" id="quiz3-stats" style="margin-bottom: 20px; font-size: 1.15rem; font-weight:bold; color:#ff4757; white-space: pre-line;"></p>
+                <button class="btn" onclick="initQuiz3()">再玩一次 🎮</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. 生字管理區 -->
+    <div id="manage-section" class="section">
+        <h3 style="color:#70a1ff; margin-top:0;">✏️ 新增生字</h3>
+        <input type="text" id="new-word" placeholder="輸入英文生字 (例如: apple)" autocapitalize="off" autocorrect="off">
+        <button class="ai-btn" id="translate-btn" onclick="autoTranslateWord()">🌐 Google 翻譯自動填寫中文意思</button>
+        
+        <div class="input-group">
+            <input type="text" id="new-phonetic" placeholder="音標 (選填)">
+            <input type="text" id="new-meaning" placeholder="中文意思 (例如: 蘋果)">
+        </div>
+        <textarea id="new-example" placeholder="例句 (選填)" rows="2"></textarea>
+        <button class="btn" onclick="addNewWord()" style="width: 100%; background-color:#2ed573; box-shadow: 0 4px 0 #20bf6b;">➕ 新增至生字本</button>
+
+        <h3 style="margin-top: 24px; color:#70a1ff;">📖 現有生字列表 (<span id="manage-count">16</span> 字)</h3>
+        <div class="word-list" id="word-list-container"></div>
+    </div>
+</div>
+
+<script>
+    // 預設兩組章節生字資料
+    const defaultChapters = {
+        "ch1": {
+            "title": "第 1 組：食物包裝與營養（16字）",
+            "words": [
+                {
+                    "word": "A carton of soya milk",
+                    "phonetic": "/ə ˈkɑːrtn əv ˈsɔɪə mɪlk/",
+                    "meaning": "一盒豆漿",
+                    "example": "I drink a carton of soya milk for breakfast."
+                },
+                {
+                    "word": "A tin of sausages",
+                    "phonetic": "/ə tɪn əv ˈsɒsɪdʒɪz/",
+                    "meaning": "一罐香腸",
+                    "example": "We bought a tin of sausages for the picnic."
+                },
+                {
+                    "word": "A tin of nuts",
+                    "phonetic": "/ə tɪn əv nʌts/",
+                    "meaning": "一罐堅果",
+                    "example": "Dad opened a tin of nuts to share."
+                },
+                {
+                    "word": "A packet of raisins",
+                    "phonetic": "/ə ˈpækɪt əv ˈreɪznz/",
+                    "meaning": "一包葡萄乾",
+                    "example": "She put a packet of raisins in her lunchbox."
+                },
+                {
+                    "word": "A packet of seaweed",
+                    "phonetic": "/ə ˈpækɪt əv ˈsiːwiːd/",
+                    "meaning": "一包海苔",
+                    "example": "I like eating a packet of seaweed as a snack."
+                },
+                {
+                    "word": "A bar of chocolate",
+                    "phonetic": "/ə bɑːr əv ˈtʃɒklət/",
+                    "meaning": "一條朱古力",
+                    "example": "He shared a bar of chocolate with his sister."
+                },
+                {
+                    "word": "A jar of honey",
+                    "phonetic": "/ə dʒɑːr əv ˈhʌni/",
+                    "meaning": "一瓶蜂蜜",
+                    "example": "There is a jar of honey on the kitchen table."
+                },
+                {
+                    "word": "A jar of peanut butter",
+                    "phonetic": "/ə dʒɑːr əv ˈpiːnʌt ˈbʌtər/",
+                    "meaning": "一瓶花生醬",
+                    "example": "We need a jar of peanut butter for sandwiches."
+                },
+                {
+                    "word": "A loaf of bread",
+                    "phonetic": "/ə ləʊf əv bred/",
+                    "meaning": "一條麵包",
+                    "example": "Mum bought a fresh loaf of bread from the bakery."
+                },
+                {
+                    "word": "A bunch of bananas",
+                    "phonetic": "/ə bʌntʃ əv bəˈnɑːnəz/",
+                    "meaning": "一串香蕉",
+                    "example": "Monkeys love eating a bunch of bananas."
+                },
+                {
+                    "word": "A bunch of grapes",
+                    "phonetic": "/ə bʌntʃ əv ɡreɪps/",
+                    "meaning": "一串提子",
+                    "example": "Let's wash a bunch of grapes after dinner."
+                },
+                {
+                    "word": "Unhealthy",
+                    "phonetic": "/ʌnˈhelθi/",
+                    "meaning": "不健康的",
+                    "example": "Eating too much junk food is unhealthy."
+                },
+                {
+                    "word": "Unpopular",
+                    "phonetic": "/ʌnˈpɒpjələ(r)/",
+                    "meaning": "不受歡迎的",
+                    "example": "Bitter vegetables are often unpopular with kids."
+                },
+                {
+                    "word": "Disgusting",
+                    "phonetic": "/dɪsˈɡʌstɪŋ/",
+                    "meaning": "令人作嘔的／難吃的",
+                    "example": "This rotten food smells disgusting."
+                },
+                {
+                    "word": "Vitamins",
+                    "phonetic": "/ˈvɪtəmɪnz/",
+                    "meaning": "維他命",
+                    "example": "Fruits and vegetables are rich in vitamins."
+                },
+                {
+                    "word": "Minerals",
+                    "phonetic": "/ˈmɪnərəlz/",
+                    "meaning": "礦物質",
+                    "example": "Milk and nuts give our bodies important minerals."
+                }
+            ]
+        },
+        "ch2": {
+            "title": "第 2 組：餐點與味覺形容（14字）",
+            "words": [
+                {
+                    "word": "Noodles with pork chop",
+                    "phonetic": "/ˈnuːdlz wɪð pɔːk tʃɒp/",
+                    "meaning": "豬扒麵",
+                    "example": "I ordered a bowl of noodles with pork chop for lunch."
+                },
+                {
+                    "word": "Noodles with dumplings",
+                    "phonetic": "/ˈnuːdlz wɪð ˈdʌmplɪŋz/",
+                    "meaning": "雲吞麵／餃子麵",
+                    "example": "My grandma loves eating noodles with dumplings."
+                },
+                {
+                    "word": "Tuna salad",
+                    "phonetic": "/ˈtjuːnə ˈsæləd/",
+                    "meaning": "吞拿魚沙律",
+                    "example": "She made a fresh tuna salad for dinner."
+                },
+                {
+                    "word": "Prawn salad",
+                    "phonetic": "/prɔːn ˈsæləd/",
+                    "meaning": "蝦沙律",
+                    "example": "The prawn salad tastes very fresh and healthy."
+                },
+                {
+                    "word": "Macaroni with mushrooms",
+                    "phonetic": "/ˌmækəˈrəʊni wɪð ˈmʌʃruːmz/",
+                    "meaning": "蘑菇通心粉",
+                    "example": "He ate macaroni with mushrooms at the cafe."
+                },
+                {
+                    "word": "Spaghetti with meat sauce",
+                    "phonetic": "/spəˈɡeti wɪð miːt sɔːs/",
+                    "meaning": "肉醬意粉",
+                    "example": "Spaghetti with meat sauce is my favourite dish."
+                },
+                {
+                    "word": "Mango pudding",
+                    "phonetic": "/ˈmæŋɡəʊ ˈpʊdɪŋ/",
+                    "meaning": "芒果布甸",
+                    "example": "We had sweet mango pudding for dessert."
+                },
+                {
+                    "word": "Blueberry cheesecake",
+                    "phonetic": "/ˈbluːbəri ˈtʃiːzkeɪk/",
+                    "meaning": "藍莓芝士蛋糕",
+                    "example": "Mum bought a blueberry cheesecake for my birthday."
+                },
+                {
+                    "word": "Sour",
+                    "phonetic": "/ˈsaʊə(r)/",
+                    "meaning": "酸的",
+                    "example": "Lemons taste very sour."
+                },
+                {
+                    "word": "Bitter",
+                    "phonetic": "/ˈbɪtə(r)/",
+                    "meaning": "苦的",
+                    "example": "Black coffee without sugar tastes bitter."
+                },
+                {
+                    "word": "Spicy",
+                    "phonetic": "/ˈspaɪsi/",
+                    "meaning": "辣的",
+                    "example": "This curry is too spicy for me."
+                },
+                {
+                    "word": "Oily",
+                    "phonetic": "/ˈɔɪli/",
+                    "meaning": "油膩的",
+                    "example": "Fried chicken is delicious, but it is very oily."
+                },
+                {
+                    "word": "Appetizer",
+                    "phonetic": "/ˈæpɪtaɪzə(r)/",
+                    "meaning": "頭盤／開胃菜",
+                    "example": "We ordered soup and salad as an appetizer."
+                },
+                {
+                    "word": "Main course",
+                    "phonetic": "/ˌmeɪn ˈkɔːs/",
+                    "meaning": "主菜",
+                    "example": "For the main course, I would like steak and chips."
+                }
+            ]
+        }
+    };
+
+    let currentChapter = localStorage.getItem('vocab_active_chapter') || 'ch1';
+    let words = [];
+
+    let currentCardIndex = 0;
+    let currentQuiz1Word = null;
+    let currentQuiz2Word = null;
+    let currentQuiz3Word = null;
+    let currentSpeechRate = 1.0;
+
+    let quiz1Queue = [];
+    let quiz1Total = 0;
+    let quiz1CurrentStep = 0;
+
+    let quiz2Queue = [];
+    let quiz2Total = 0;
+    let quiz2CurrentStep = 0;
+
+    let quiz3Queue = [];
+    let quiz3Total = 0;
+    let quiz3CurrentStep = 0;
+
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    let cachedEnglishVoice = null;
+    let toastTimeout = null;
+    let confirmCallback = null;
+
+    // 友善通知訊息 (取代 alert)
+    function showToast(message) {
+        const toast = document.getElementById('toast-banner');
+        toast.innerText = message;
+        toast.style.display = 'block';
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            toast.style.display = 'none';
+        }, 2800);
+    }
+
+    // 自訂確認對話框 (取代 confirm)
+    function showConfirm(message, onConfirm) {
+        document.getElementById('confirm-modal-text').innerText = message;
+        document.getElementById('confirm-modal').style.display = 'flex';
+        confirmCallback = onConfirm;
+    }
+
+    function closeConfirmModal(confirmed) {
+        document.getElementById('confirm-modal').style.display = 'none';
+        if (confirmed && typeof confirmCallback === 'function') {
+            confirmCallback();
+        }
+        confirmCallback = null;
+    }
+
+    // 取得章節生字
+    function getChapterWords(chap) {
+        try {
+            if (chap === 'all') {
+                const w1 = JSON.parse(localStorage.getItem('vocab_merged_ch1')) || defaultChapters.ch1.words;
+                const w2 = JSON.parse(localStorage.getItem('vocab_merged_ch2')) || defaultChapters.ch2.words;
+                return [...w1, ...w2];
+            }
+            const stored = JSON.parse(localStorage.getItem('vocab_merged_' + chap));
+            return stored || JSON.parse(JSON.stringify(defaultChapters[chap].words));
+        } catch (e) {
+            if (chap === 'all') {
+                return [...defaultChapters.ch1.words, ...defaultChapters.ch2.words];
+            }
+            return JSON.parse(JSON.stringify(defaultChapters[chap].words));
+        }
+    }
+
+    function saveToLocalStorage() {
+        try {
+            if (currentChapter === 'ch1' || currentChapter === 'ch2') {
+                localStorage.setItem('vocab_merged_' + currentChapter, JSON.stringify(words));
+            }
+        } catch (e) {
+            console.error('儲存失敗:', e);
+        }
+    }
+
+    function requestResetChapter() {
+        showConfirm("確定要將目前章節還原為預設生字庫嗎？", () => {
+            if (currentChapter === 'all') {
+                localStorage.removeItem('vocab_merged_ch1');
+                localStorage.removeItem('vocab_merged_ch2');
+            } else {
+                localStorage.removeItem('vocab_merged_' + currentChapter);
+            }
+            words = getChapterWords(currentChapter);
+            currentCardIndex = 0;
+            refreshActiveView();
+            showToast("✅ 已還原為預設生字庫！");
+        });
+    }
+
+    function switchChapter(chap) {
+        stopTimer();
+        currentChapter = chap;
+        try {
+            localStorage.setItem('vocab_active_chapter', chap);
+        } catch (e) {}
+        words = getChapterWords(chap);
+        currentCardIndex = 0;
+        refreshActiveView();
+    }
+
+    function refreshActiveView() {
+        updateFlashcard();
+        renderWordList();
+        const activeSec = document.querySelector('.section.active');
+        if (activeSec) {
+            if (activeSec.id === 'quiz1-section') initQuiz1();
+            else if (activeSec.id === 'quiz2-section') initQuiz2();
+            else if (activeSec.id === 'quiz3-section') initQuiz3();
+        }
+    }
+
+    // 語音引擎初始化 (針對 iOS/iPadOS Safari 優化)
+    function initVoices() {
+        if (!('speechSynthesis' in window)) return;
+        const voices = window.speechSynthesis.getVoices();
+        if (!voices || voices.length === 0) return;
+
+        cachedEnglishVoice = voices.find(v =>
+            v.lang === 'en-US' && (
+                v.name.includes('Samantha') ||
+                v.name.includes('Nicky') ||
+                v.name.includes('Ava') ||
+                v.name.includes('Zira') ||
+                v.name.includes('Google US English')
+            )
+        ) || voices.find(v => v.lang.startsWith('en-US')) || voices.find(v => v.lang.startsWith('en')) || null;
+    }
+
+    if ('speechSynthesis' in window) {
+        initVoices();
+        window.speechSynthesis.onvoiceschanged = initVoices;
+    }
+
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) {
+            showToast("⚠️ 您的瀏覽器不支援語音朗讀功能！");
+            return;
+        }
+        try {
+            // iOS Safari 解決語音卡住的標準做法
+            if (window.speechSynthesis.paused) {
+                window.speechSynthesis.resume();
+            }
+            window.speechSynthesis.cancel();
+
+            if (!cachedEnglishVoice) {
+                initVoices();
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = currentSpeechRate;
+            utterance.pitch = 1.0;
+
+            if (cachedEnglishVoice) {
+                utterance.voice = cachedEnglishVoice;
+            }
+
+            window.speechSynthesis.speak(utterance);
+        } catch (e) {
+            console.error('語音播放錯誤:', e);
+        }
+    }
+
+    function setSpeechSpeed(rate, btnElement) {
+        currentSpeechRate = rate;
+        document.querySelectorAll('.speed-btn').forEach(btn => btn.classList.remove('active'));
+        btnElement.classList.add('active');
+    }
+
+    // 計時器控制
+    function startTimer(timerElementId) {
+        stopTimer();
+        secondsElapsed = 0;
+        updateTimerDisplay(timerElementId);
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            updateTimerDisplay(timerElementId);
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    function updateTimerDisplay(timerElementId) {
+        const el = document.getElementById(timerElementId);
+        if (el) {
+            const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+            el.innerText = `⏱️ 時間：${mins}:${secs}`;
+        }
+    }
+
+    // Google 翻譯自動填寫
+    async function autoTranslateWord() {
+        const wordInput = document.getElementById('new-word').value.trim();
+        if (!wordInput) {
+            showToast("請先輸入英文生字！");
+            return;
+        }
+
+        const btn = document.getElementById('translate-btn');
+        btn.innerText = "🔄 正在使用 Google 翻譯...";
+        btn.disabled = true;
+
+        try {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURIComponent(wordInput)}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data && data[0] && data[0][0] && data[0][0][0]) {
+                document.getElementById('new-meaning').value = data[0][0][0];
+                showToast("✨ 翻譯完成！");
+            } else {
+                throw new Error("翻譯解析失敗");
+            }
+        } catch (error) {
+            console.error(error);
+            showToast("⚠️ 自動翻譯暫時無法連線，請手動輸入中文意思。");
+        } finally {
+            btn.innerText = "🌐 Google 翻譯自動填寫中文意思";
+            btn.disabled = false;
+        }
+    }
+
+    // 切換功能分頁
+    function switchTab(tabName, btnEl) {
+        stopTimer();
+        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+        if (btnEl) {
+            btnEl.classList.add('active');
+        }
+
+        if (tabName === 'flashcard') {
+            document.getElementById('flashcard-section').classList.add('active');
+            updateFlashcard();
+        } else if (tabName === 'quiz1') {
+            document.getElementById('quiz1-section').classList.add('active');
+            initQuiz1();
+        } else if (tabName === 'quiz2') {
+            document.getElementById('quiz2-section').classList.add('active');
+            initQuiz2();
+        } else if (tabName === 'quiz3') {
+            document.getElementById('quiz3-section').classList.add('active');
+            initQuiz3();
+        } else if (tabName === 'manage') {
+            document.getElementById('manage-section').classList.add('active');
+            renderWordList();
+        }
+    }
+
+    // --- 1. 閃卡邏輯 ---
+    function updateFlashcard() {
+        if (words.length === 0) {
+            document.getElementById('fc-word').innerText = "尚無生字";
+            document.getElementById('fc-phonetic').innerText = "";
+            document.getElementById('fc-meaning').innerText = "請先到「生字管理」新增生字";
+            document.getElementById('fc-example').innerText = "";
+            document.getElementById('card-counter').innerText = "0 / 0";
+            return;
+        }
+
+        const item = words[currentCardIndex];
+        document.getElementById('fc-word').innerText = item.word;
+        document.getElementById('fc-phonetic').innerText = item.phonetic || "";
+        document.getElementById('fc-meaning').innerText = item.meaning;
+        document.getElementById('fc-example').innerText = item.example ? `例句：${item.example}` : "";
+        document.getElementById('card').classList.remove('flipped');
+        document.getElementById('card-counter').innerText = `${currentCardIndex + 1} / ${words.length}`;
+    }
+
+    function flipCard() {
+        if (words.length === 0) return;
+        document.getElementById('card').classList.toggle('flipped');
+    }
+
+    function speakCurrentWord(e) {
+        if (e) e.stopPropagation();
+        if (words.length === 0) return;
+        speakText(words[currentCardIndex].word);
+    }
+
+    function nextCard() {
+        if (words.length === 0) return;
+        currentCardIndex = (currentCardIndex + 1) % words.length;
+        updateFlashcard();
+    }
+
+    function prevCard() {
+        if (words.length === 0) return;
+        currentCardIndex = (currentCardIndex - 1 + words.length) % words.length;
+        updateFlashcard();
+    }
+
+    // --- 2. 測驗 1：看字選義 ---
+    function initQuiz1() {
+        if (words.length < 4) {
+            document.getElementById('quiz1-container').style.display = 'none';
+            document.getElementById('quiz1-finished').style.display = 'block';
+            document.getElementById('quiz1-finished').innerHTML = '<h2>生字數量不足 4 個</h2><p class="hint-text">請至少新增 4 個生字才能進行選擇題測驗！</p>';
+            return;
+        }
+
+        document.getElementById('quiz1-container').style.display = 'block';
+        document.getElementById('quiz1-finished').style.display = 'none';
+
+        quiz1Queue = [...words].sort(() => Math.random() - 0.5);
+        quiz1Total = quiz1Queue.length;
+        quiz1CurrentStep = 0;
+
+        startTimer('quiz1-timer');
+        loadQuiz1();
+    }
+
+    function loadQuiz1() {
+        if (quiz1Queue.length === 0) {
+            stopTimer();
+            const totalTimeStr = document.getElementById('quiz1-timer').innerText;
+            document.getElementById('quiz1-container').style.display = 'none';
+            document.getElementById('quiz1-finished').style.display = 'block';
+            document.getElementById('quiz1-stats').innerText = `太棒了！你已經完成所有 ${quiz1Total} 個生字挑戰！\n總共花費 ${totalTimeStr.replace('⏱️ 時間：', '')}`;
+            return;
+        }
+
+        quiz1CurrentStep++;
+        document.getElementById('quiz1-counter').innerText = `題目 ${quiz1CurrentStep} / ${quiz1Total}`;
+
+        currentQuiz1Word = quiz1Queue.shift();
+        document.getElementById('quiz1-result').innerText = '';
+
+        document.getElementById('quiz1-question').innerHTML = `請找出英文生字 <span style="color:#ff4757;">${currentQuiz1Word.word}</span> 的中文意思：`;
+
+        let options = [currentQuiz1Word.meaning];
+        while (options.length < 4) {
+            const randomWord = words[Math.floor(Math.random() * words.length)];
+            if (!options.includes(randomWord.meaning)) {
+                options.push(randomWord.meaning);
+            }
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        const container = document.getElementById('quiz1-options');
+        container.innerHTML = '';
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkQuiz1Answer(btn, opt);
+            container.appendChild(btn);
+        });
+
+        speakText(currentQuiz1Word.word);
+    }
+
+    function speakQuiz1Word() {
+        if (currentQuiz1Word) speakText(currentQuiz1Word.word);
+    }
+
+    function checkQuiz1Answer(selectedBtn, selectedText) {
+        const allButtons = document.querySelectorAll('#quiz1-options .option-btn');
+        const resultDiv = document.getElementById('quiz1-result');
+
+        if (selectedText === currentQuiz1Word.meaning) {
+            allButtons.forEach(btn => btn.disabled = true);
+            selectedBtn.classList.add('correct');
+            resultDiv.style.color = '#2ed573';
+            resultDiv.innerText = `🎉 答對了！好棒！`;
+
+            setTimeout(() => {
+                loadQuiz1();
+            }, 1100);
+        } else {
+            selectedBtn.classList.add('incorrect');
+            selectedBtn.disabled = true;
+            resultDiv.style.color = '#ff4757';
+            resultDiv.innerText = `❌ 答錯囉，再試一次！`;
+        }
+    }
+
+    // --- 3. 測驗 2：聽音辨字 ---
+    function initQuiz2() {
+        if (words.length < 4) {
+            document.getElementById('quiz2-container').style.display = 'none';
+            document.getElementById('quiz2-finished').style.display = 'block';
+            document.getElementById('quiz2-finished').innerHTML = '<h2>生字數量不足 4 個</h2><p class="hint-text">請至少新增 4 個生字才能進行選擇題測驗！</p>';
+            return;
+        }
+
+        document.getElementById('quiz2-container').style.display = 'block';
+        document.getElementById('quiz2-finished').style.display = 'none';
+
+        quiz2Queue = [...words].sort(() => Math.random() - 0.5);
+        quiz2Total = quiz2Queue.length;
+        quiz2CurrentStep = 0;
+
+        startTimer('quiz2-timer');
+        loadQuiz2();
+    }
+
+    function loadQuiz2() {
+        if (quiz2Queue.length === 0) {
+            stopTimer();
+            const totalTimeStr = document.getElementById('quiz2-timer').innerText;
+            document.getElementById('quiz2-container').style.display = 'none';
+            document.getElementById('quiz2-finished').style.display = 'block';
+            document.getElementById('quiz2-stats').innerText = `太棒了！你已經完成所有 ${quiz2Total} 個生字挑戰！\n總共花費 ${totalTimeStr.replace('⏱️ 時間：', '')}`;
+            return;
+        }
+
+        quiz2CurrentStep++;
+        document.getElementById('quiz2-counter').innerText = `題目 ${quiz2CurrentStep} / ${quiz2Total}`;
+
+        currentQuiz2Word = quiz2Queue.shift();
+        document.getElementById('quiz2-result').innerText = '';
+
+        let options = [currentQuiz2Word.word];
+        while (options.length < 4) {
+            const randomWord = words[Math.floor(Math.random() * words.length)].word;
+            if (!options.includes(randomWord)) {
+                options.push(randomWord);
+            }
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        const container = document.getElementById('quiz2-options');
+        container.innerHTML = '';
+        options.forEach(optWord => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = optWord;
+            btn.onclick = () => checkQuiz2Answer(btn, optWord);
+            container.appendChild(btn);
+        });
+
+        speakText(currentQuiz2Word.word);
+    }
+
+    function speakQuiz2Word() {
+        if (currentQuiz2Word) speakText(currentQuiz2Word.word);
+    }
+
+    function checkQuiz2Answer(selectedBtn, selectedWord) {
+        const allButtons = document.querySelectorAll('#quiz2-options .option-btn');
+        const resultDiv = document.getElementById('quiz2-result');
+
+        if (selectedWord === currentQuiz2Word.word) {
+            allButtons.forEach(btn => btn.disabled = true);
+            selectedBtn.classList.add('correct');
+            resultDiv.style.color = '#2ed573';
+            resultDiv.innerText = `🎉 答對了！好棒！`;
+
+            setTimeout(() => {
+                loadQuiz2();
+            }, 1100);
+        } else {
+            selectedBtn.classList.add('incorrect');
+            selectedBtn.disabled = true;
+            resultDiv.style.color = '#ff4757';
+            resultDiv.innerText = `❌ 答錯囉，再試一次！`;
+        }
+    }
+
+    // --- 4. 測驗 3：聽音拼字 ---
+    function initQuiz3() {
+        if (words.length === 0) {
+            document.getElementById('quiz3-container').style.display = 'none';
+            document.getElementById('quiz3-finished').style.display = 'block';
+            document.getElementById('quiz3-finished').innerHTML = '<h2>尚無生字</h2><p class="hint-text">請先到生字管理新增生字！</p>';
+            return;
+        }
+
+        document.getElementById('quiz3-container').style.display = 'block';
+        document.getElementById('quiz3-finished').style.display = 'none';
+
+        quiz3Queue = [...words].sort(() => Math.random() - 0.5);
+        quiz3Total = quiz3Queue.length;
+        quiz3CurrentStep = 0;
+
+        startTimer('quiz3-timer');
+        loadQuiz3();
+    }
+
+    function loadQuiz3() {
+        if (quiz3Queue.length === 0) {
+            stopTimer();
+            const totalTimeStr = document.getElementById('quiz3-timer').innerText;
+            document.getElementById('quiz3-container').style.display = 'none';
+            document.getElementById('quiz3-finished').style.display = 'block';
+            document.getElementById('quiz3-stats').innerText = `太棒了！你已經完成所有 ${quiz3Total} 個生字挑戰！\n總共花費 ${totalTimeStr.replace('⏱️ 時間：', '')}`;
+            return;
+        }
+
+        quiz3CurrentStep++;
+        document.getElementById('quiz3-counter').innerText = `題目 ${quiz3CurrentStep} / ${quiz3Total}`;
+
+        currentQuiz3Word = quiz3Queue.shift();
+
+        document.getElementById('quiz3-hint').innerText = `提示：中文意思是「 ${currentQuiz3Word.meaning} 」`;
+        const inputField = document.getElementById('quiz3-input');
+        inputField.value = '';
+        inputField.disabled = false;
+        document.getElementById('quiz3-submit-btn').style.display = 'inline-block';
+        document.getElementById('quiz3-result').innerText = '';
+
+        speakText(currentQuiz3Word.word);
+        setTimeout(() => inputField.focus(), 100);
+    }
+
+    function speakQuiz3Word() {
+        if (currentQuiz3Word) speakText(currentQuiz3Word.word);
+    }
+
+    function handleSpellingKeydown(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            checkSpellingAnswer();
+        }
+    }
+
+    function checkSpellingAnswer() {
+        const inputField = document.getElementById('quiz3-input');
+        // 將連續多個空格壓縮為單一空格，避免 iPad 雙擊空白鍵產生額外空格導致誤判
+        const userInputValue = inputField.value.trim().replace(/\s+/g, ' ');
+        if (!userInputValue) return;
+
+        const correctWord = currentQuiz3Word.word.trim().replace(/\s+/g, ' ');
+        const resultDiv = document.getElementById('quiz3-result');
+
+        if (userInputValue.toLowerCase() === correctWord.toLowerCase()) {
+            resultDiv.style.color = '#2ed573';
+            resultDiv.innerText = `🎉 拼對了！真厲害！(${currentQuiz3Word.word})`;
+            inputField.disabled = true;
+            document.getElementById('quiz3-submit-btn').style.display = 'none';
+
+            setTimeout(() => {
+                loadQuiz3();
+            }, 1200);
+        } else {
+            resultDiv.style.color = '#ff4757';
+            resultDiv.innerText = `❌ 拼錯囉，再聽一次並重新輸入看看！`;
+            inputField.value = '';
+            inputField.focus();
+        }
+    }
+
+    // --- 5. 管理生字邏輯 ---
+    function renderWordList() {
+        const container = document.getElementById('word-list-container');
+        document.getElementById('manage-count').innerText = words.length;
+        container.innerHTML = '';
+
+        if (words.length === 0) {
+            container.innerHTML = '<p class="hint-text">目前沒有生字</p>';
+            return;
+        }
+
+        words.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'word-item';
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'word-item-info';
+            infoDiv.innerHTML = `
+                <strong>${item.word}</strong> <span style="color:var(--gray-color); font-size:0.88rem;">${item.phonetic || ''}</span>
+                <div style="font-size: 0.92rem; color: #57606f; margin-top: 2px;">${item.meaning}</div>
+            `;
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.style.cssText = 'display: flex; gap: 8px; flex-shrink: 0;';
+
+            const speakBtn = document.createElement('button');
+            speakBtn.className = 'speak-btn';
+            speakBtn.style.cssText = 'margin:0; padding:8px 12px; font-size:0.88rem; min-height:38px;';
+            speakBtn.innerText = '🔊 讀音';
+            speakBtn.onclick = () => speakText(item.word);
+            actionsDiv.appendChild(speakBtn);
+
+            if (currentChapter !== 'all') {
+                const delBtn = document.createElement('button');
+                delBtn.className = 'delete-btn';
+                delBtn.innerText = '刪除';
+                delBtn.onclick = () => deleteWord(index);
+                actionsDiv.appendChild(delBtn);
+            }
+
+            div.appendChild(infoDiv);
+            div.appendChild(actionsDiv);
+            container.appendChild(div);
+        });
+    }
+
+    function addNewWord() {
+        if (currentChapter === 'all') {
+            showToast("請先在上方切換至「第 1 組」或「第 2 組」再新增生字！");
+            return;
+        }
+        const wordInput = document.getElementById('new-word').value.trim();
+        const phonetic = document.getElementById('new-phonetic').value.trim();
+        const meaning = document.getElementById('new-meaning').value.trim();
+        const example = document.getElementById('new-example').value.trim();
+
+        if (!wordInput || !meaning) {
+            showToast("請至少填寫「英文生字」與「中文意思」！");
+            return;
+        }
+
+        const word = wordInput.charAt(0).toUpperCase() + wordInput.slice(1);
+
+        words.push({ word, phonetic, meaning, example });
+        saveToLocalStorage();
+        renderWordList();
+
+        document.getElementById('new-word').value = '';
+        document.getElementById('new-phonetic').value = '';
+        document.getElementById('new-meaning').value = '';
+        document.getElementById('new-example').value = '';
+
+        showToast("🎉 成功新增生字！");
+    }
+
+    function deleteWord(index) {
+        showConfirm(`確定要刪除「${words[index].word}」嗎？`, () => {
+            words.splice(index, 1);
+            saveToLocalStorage();
+            renderWordList();
+            showToast("🗑️ 已刪除生字");
+        });
+    }
+
+    // 初始化載入
+    document.getElementById('chapter-select').value = currentChapter;
+    words = getChapterWords(currentChapter);
+    updateFlashcard();
+    renderWordList();
+</script>
+</body>
+</html>
